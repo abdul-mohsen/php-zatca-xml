@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Directory containing JSON files
-DIRECTORY="../../sample"
+DIRECTORY="../../bills"
 composer install  --prefer-dist --no-dev
 cd examples/InvoiceSimplified
 

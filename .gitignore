@@ -81,3 +81,10 @@ composer.lock
 error
 log
 
+.env
+venv/*
+
+composer-installer.php
+carpart-6ed9b-b0968f704e92.json
+base.json
+bills/

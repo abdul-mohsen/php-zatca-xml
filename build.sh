@@ -1,3 +1,7 @@
-composer install  --prefer-dist --no-dev
-cd examples/InvoiceSimplified
-php simplified_invoice.php
+# composer install  --prefer-dist --no-dev
+# cd examples/InvoiceSimplified
+# php simplified_invoice.php
+
+source venv/bin/activate
+
+python main.py
