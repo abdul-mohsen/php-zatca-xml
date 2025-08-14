@@ -11,6 +11,42 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+def to_billx(id, p, name):
+
+    return  
+    {
+        "id": id,
+        "unitCode": "PCE",
+        "quantity": p["quantity"],
+        "lineExtensionAmount": p["total_before_vat"],
+        "item": {
+            "name": name,
+            "classifiedTaxCategory": [
+                {
+                    "percent": p["vat"],
+                    "taxScheme": {
+                        "id": "VAT"
+                    }
+                }
+            ]
+        },
+        "price": {
+            "amount": p["price"],
+            "unitCode": "UNIT",
+            "allowanceCharges": [
+                {
+                    "isCharge": false,
+                    "reason": "discount",
+                    "amount": 0.00
+                }
+            ]
+        },
+        "taxTotal": {
+            "taxAmount": p["total_including_vat"],
+            "roundingAmount": p["total_including_vat"]
+        }
+    }
+
 def to_bill(id, quantity, price, name):
     print(id, quantity, price, name)
     cost = quantity * price
@@ -66,14 +102,66 @@ engine = create_engine(connection_string)
 # Fetch all data from the table using a raw SQL query
 table_name = 'bill'  # Replace with your actual table name
 query = """
-SELECT p.*, 
-JSON_ARRAYAGG(JSON_OBJECT('id', c.product_id, 'price', c.price, 'quantity', c.quantity)) as products,
-JSON_ARRAYAGG(JSON_OBJECT('name', d.part_name, 'price', d.price, 'quantity', d.quantity)) as manual_products
-FROM bill p
-LEFT JOIN bill_product c ON p.id = c.bill_id
-LEFT JOIN bill_manual_product d ON p.id = d.bill_id
-where p.state = 1
-group by p.id
+        SELECT 
+        b.id,
+			CONCAT('https://ifritah.com/bill/', b.id) AS url,
+			effective_date,
+			payment_due_date,
+			b.state as state,
+			b.sub_total,
+			b.discount,
+			b.vat,
+			b.store_id,
+                        total_before_vat,
+                        total_vat,
+                        total,
+			sequence_number,
+			merchant_id,
+			maintenance_cost,
+			note,
+			b.userName as userName,
+			user_phone_number,
+			company.name as company_name,
+			company.vat_registration_number,
+			store.address_name,
+			COALESCE(
+				(SELECT JSON_ARRAYAGG(
+					JSON_OBJECT(
+						'product_id', p.product_id,
+						'price', p.price,
+						'quantity', p.quantity,
+						'vat', p.vat,
+						'total_before_vat', p.total_before_vat,
+						'vat_total', p.vat_total,
+						'total_including_vat', p.total_including_vat
+					)
+				)
+				FROM bill_product p
+				WHERE p.bill_id = b.id), 
+				JSON_ARRAY()) AS products,
+			COALESCE(
+				(SELECT JSON_ARRAYAGG(
+					JSON_OBJECT(
+						'part_name', m.part_name,
+						'price', m.price,
+						'quantity', m.quantity,
+						'vat', m.vat,
+						'total_before_vat', m.total_before_vat,
+						'vat_total', m.vat_total,
+						'total_including_vat', m.total_including_vat
+					)
+				)
+				FROM bill_manual_product m
+				WHERE m.bill_id = b.id), 
+				JSON_ARRAY()) AS manual_products
+        FROM 
+            bill_totals b
+		JOIN 
+			store on store.id = b.store_id 
+		JOIN 
+			company on company.id = store.company_id
+        where b.state = 1
+		;
 """
 try:
     result_df = pd.read_sql(query, engine)
@@ -89,16 +177,15 @@ with open('base.json') as f:
 
 for data in  json_result:
     r["uuid"] = str(uuid.uuid4())
-    print(data)
     dt_object = datetime.fromtimestamp(data["effective_date"]/1000)
     formatted_date_time = dt_object.strftime("%Y-%m-%d %H:%M:%S").split(" ")
     r["issueDate"] = formatted_date_time[0]
     r["issueTiem"] = formatted_date_time[1]
     r["taxTotal"] = {
-        "taxAmount": data["vat"],
+        "taxAmount": data["total_vat"],
         "subTotals": [{
-            "taxableAmount": data["sub_total"],
-            "taxAmount": data["vat"],
+            "taxableAmount": data["total_before_vat"],
+            "taxAmount": data["total_vat"],
             "taxCategory": {
                 "percent": 15,
                 "taxScheme": {
@@ -108,11 +195,11 @@ for data in  json_result:
         }]
     }
     r["legalMonetaryTotal"] = {
-        "lineExtensionAmount": data["sub_total"],
-        "taxExclusiveAmount": data["sub_total"],
-        "taxInclusiveAmount": data["sub_total"] + data["vat"],
+        "lineExtensionAmount": data["total_before_vat"],
+        "taxExclusiveAmount": data["total_before_vat"],
+        "taxInclusiveAmount": data["total"],
         "prepaidAmount": 0,
-        "payableAmount": data["sub_total"] + data["vat"],
+        "payableAmount": data["total"],
         "allowanceTotalAmount": 0
     }
     invoiceLines = []
@@ -121,18 +208,27 @@ for data in  json_result:
         if p["price"] == None or p["quantity"] == None:
             continue
         id = id + 1
-        invoiceLines.append(to_bill(id, p['quantity'], p['price'], f"{id}"))
+        invoiceLines.append(to_billx(id, p, f"{id}"))
     for p in json.loads(data["manual_products"]):
         if p["price"] == None or p["quantity"] == None:
             continue
         id = id + 1
-        invoiceLines.append(to_bill(id, p["quantity"], p["price"], p["name"]))
+        invoiceLines.append(to_billx(id, p, p["part_name"]))
     cost = data["maintenance_cost"]
     if cost != 0:
         id = id + 1
         invoiceLines.append(to_bill(id, 1, cost, "maintenance_cost"))
 
-    with open(f'bills/{data["id"]:0>7}.json', 'w') as f:
+    # Check if the directory exists
+    directory = f'bills/{data["company_name"]}/'
+
+    if not os.path.exists(directory):
+        # Create the directory
+        os.makedirs(directory)
+    else:
+        print(f"Directory '{directory}' already exists.")
+
+    with open(f'{directory}{data["sequence_number"]:0>7}.json', 'w') as f:
         json.dump(r, f, indent=4)
 
 
