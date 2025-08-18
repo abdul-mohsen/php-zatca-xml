@@ -4,9 +4,10 @@
 DIRECTORY="../../bills"
 composer install  --prefer-dist --no-dev
 cd examples/InvoiceSimplified
+rm -rf examples/InvoiceSimplified/output/*
 
 # Loop through each JSON file in the directory
-for jsonFile in "$DIRECTORY"/*.json; do
+for jsonFile in "$DIRECTORY"/*/*.json; do
     # Check if the file exists
     if [[ -f "$jsonFile" ]]; then
         echo "Processing file: $jsonFile"
@@ -19,5 +20,6 @@ done
 
 # Wait for all background processes to finish
 wait
+sudo mv -f  output/* /var/www/html/downloads/
 
 echo "All files processed."

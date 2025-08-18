@@ -12,9 +12,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def to_billx(id, p, name):
+    print(p)
 
-    return  
-    {
+    return {
         "id": id,
         "unitCode": "PCE",
         "quantity": p["quantity"],
@@ -35,24 +35,22 @@ def to_billx(id, p, name):
             "unitCode": "UNIT",
             "allowanceCharges": [
                 {
-                    "isCharge": false,
+                    "isCharge": False,
                     "reason": "discount",
                     "amount": 0.00
                 }
             ]
         },
         "taxTotal": {
-            "taxAmount": p["total_including_vat"],
+            "taxAmount": p["vat_total"],
             "roundingAmount": p["total_including_vat"]
         }
     }
 
 def to_bill(id, quantity, price, name):
-    print(id, quantity, price, name)
     cost = quantity * price
 
-    return  
-    {
+    return {
         "id": id,
         "unitCode": "PCE",
         "quantity": quantity,
@@ -73,7 +71,7 @@ def to_bill(id, quantity, price, name):
             "unitCode": "UNIT",
             "allowanceCharges": [
                 {
-                    "isCharge": false,
+                    "isCharge": False,
                     "reason": "discount",
                     "amount": 0.00
                 }
@@ -208,16 +206,19 @@ for data in  json_result:
         if p["price"] == None or p["quantity"] == None:
             continue
         id = id + 1
-        invoiceLines.append(to_billx(id, p, f"{id}"))
+        item = to_billx(id, p, f"{id}")
+        invoiceLines.append(item)
     for p in json.loads(data["manual_products"]):
         if p["price"] == None or p["quantity"] == None:
             continue
         id = id + 1
-        invoiceLines.append(to_billx(id, p, p["part_name"]))
+        item = to_billx(id, p, p["part_name"])
+        invoiceLines.append(item)
     cost = data["maintenance_cost"]
     if cost != 0:
         id = id + 1
         invoiceLines.append(to_bill(id, 1, cost, "maintenance_cost"))
+    r["invoiceLines"] = invoiceLines
 
     # Check if the directory exists
     directory = f'bills/{data["company_name"]}/'
