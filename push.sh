@@ -16,7 +16,10 @@ send_invoice_request() {
     local BASE64_XML_DATA=$(base64 "$XML_FILE" | tr -d '\n')  # Remove newlines
 
     # Compute the SHA256 hash of the XML data
-    local INVOICE_HASH=$(echo "$XML_DATA" | sha256sum | awk '{ print $1 }')
+    # # Generate SHA-256 hash in hexadecimal format
+    INVOICE_HASH=$(fatoora -generateHash -invoice $XML_FILE | tail -n 1 | sed 's/.* = //; s/^[ \t]*//; s/[ \t]*$//' )
+
+    echo $INVOICE_HASH
 
     # Prepare the JSON payload
     local JSON_PAYLOAD=$(jq -n \
@@ -27,9 +30,9 @@ send_invoice_request() {
 
     # Debugging output
     # echo "Processing file: $XML_FILE"
-    echo "UUID: $UUID"
+    # echo "UUID: $UUID"
     # echo "Base64 XML Data: $BASE64_XML_DATA"
-    # echo "Invoice Hash: $INVOICE_HASH"
+    echo "Invoice Hash: $INVOICE_HASH"
     echo "Sending JSON payload: $JSON_PAYLOAD" > output
 
     # Send the request

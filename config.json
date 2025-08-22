@@ -1,0 +1,10 @@
+{
+  "xsdPath": "/home/ssda/git/Data/Schemas/xsds/UBL2.1/xsd/maindoc/",
+  "enSchematron": "/home/ssda/git/Data/Rules/schematrons/",
+  "zatcaSchematron": "/home/ssda/git/Data/Rules/schematrons/",
+  "certPath": "/home/ssda/git/Data/Certificates/",
+  "privateKeyPath": "/home/ssda/git/Data/Certificates/",
+  "pihPath": "/home/ssda/git/Data/PIH/",
+  "inputPath": "/home/ssda/git/Data/Input",
+  "usagePathFile": "/home/ssda/git/Configuration/"
+}

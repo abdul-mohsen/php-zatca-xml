@@ -269,6 +269,7 @@ class ZatcaAPI
 
             return $this->parseResponse($response);
         } catch (GuzzleException $e) {
+            print($e);
             throw new ZatcaApiException('HTTP request failed', [
                 'message'  => $e->getMessage(),
                 'endpoint' => $endpoint,
@@ -282,7 +283,7 @@ class ZatcaAPI
     private function isSuccessfulResponse(int $statusCode): bool
     {
         return in_array($statusCode, self::SUCCESS_STATUS_CODES, true) &&
-               ($this->allowWarnings || $statusCode === 200);
+            ($this->allowWarnings || $statusCode === 200);
     }
 
     /**
@@ -341,5 +342,4 @@ class ZatcaAPI
 
         (new Storage)->put($filePath, $json);
     }
-    
 }

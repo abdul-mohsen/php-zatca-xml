@@ -180,9 +180,13 @@ class InvoiceType implements XmlSerializable
             $e = $this->isExportInvoice ? '1' : '0'; // Export invoice
             $s = $this->isSummary ? '1' : '0'; // Summary invoice
             $b = $this->isSelfBilled ? '1' : '0'; // Self-billed invoice
+            $b = '0';
+            
         
             // Update the invoice type value. [PNESB]
             $invoiceTypeValue = $prefix . $p . $n . $e . $s . $b;
+            $invoiceTypeValue = "0200000"; // TODO @ssda
+
         }
 
         // Write the InvoiceTypeCode element with attributes.

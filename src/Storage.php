@@ -87,7 +87,7 @@ class Storage
      */
     public function get(string $path): string
     {
-        $fullPath = $this->path($path);
+        $fullPath = $path;
 
         if (!file_exists($fullPath)) {
             throw new ZatcaStorageException("File not found.", [
@@ -166,3 +166,4 @@ class Storage
         }
     }
 }
+
