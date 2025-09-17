@@ -177,6 +177,7 @@ for data in  json_result:
     r["uuid"] = str(uuid.uuid4())
     dt_object = datetime.fromtimestamp(data["effective_date"]/1000)
     formatted_date_time = dt_object.strftime("%Y-%m-%d %H:%M:%S").split(" ")
+    r["bill_id"] = data["id"]
     r["issueDate"] = formatted_date_time[0]
     r["issueTiem"] = formatted_date_time[1]
     r["taxTotal"] = {
@@ -229,7 +230,7 @@ for data in  json_result:
     else:
         print(f"Directory '{directory}' already exists.")
 
-    with open(f'{directory}{data["sequence_number"]:0>7}.json', 'w') as f:
+    with open(f'{directory}{data["sequence_number"]:0>7}_{data["id"]}.json', 'w') as f:
         json.dump(r, f, indent=4)
 
 

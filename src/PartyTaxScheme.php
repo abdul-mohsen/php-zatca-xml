@@ -1,4 +1,5 @@
 <?php
+
 namespace Saleh7\Zatca;
 
 use InvalidArgumentException;
@@ -27,9 +28,9 @@ class PartyTaxScheme implements XmlSerializable
      */
     public function setCompanyId(?string $companyId): self
     {
-        if ($companyId !== null && trim($companyId) === '') {
-            throw new InvalidArgumentException('Company ID cannot be empty.');
-        }
+        /*if ($companyId !== null && trim($companyId) === '') {*/
+        /*    throw new InvalidArgumentException('Company ID cannot be empty.');*/
+        /*}*/
         $this->companyId = $companyId;
         return $this;
     }
