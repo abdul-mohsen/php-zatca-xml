@@ -89,3 +89,16 @@ carpart-6ed9b-b0968f704e92.json
 base.json
 bills/
 examples/InvoiceSimplified/output/
+examples/InvoiceSimplified/credit/output/
+auth
+csr-config.properties
+csr.config
+examples/InvoiceSimplified/ZATCA_certificate_data.json
+examples/InvoiceSimplified/certificate.csr
+examples/InvoiceSimplified/private.pem
+final
+generated-csr-20250901060536.csr
+generated-private-key-20250901060536.key
+keys/
+output
+**/*.pyc

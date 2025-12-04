@@ -23,7 +23,7 @@ send_invoice_request() {
     # Send the request
     response=$(curl -s -o res -w "%{http_code}" -X POST "$URL" \
       -H 'accept: application/json' \
-      -H 'accept-language: ar' \
+      -H 'accept-language: en' \
       -H 'Clearance-Status: 1' \
       -H 'Accept-Version: V2' \
       -H "Authorization: $AUTHORIZATION" \
@@ -35,7 +35,11 @@ send_invoice_request() {
     if [[ $response -ge 200 && $response -le 299 ]]; then
         echo "Request successful!"
         bill_id=$(basename "$1" | cut -d'_' -f2 | cut -d'.' -f1)
-        mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e " UPDATE bill SET state = 3 WHERE id = ${bill_id}; "
+        if [ $2 = 0 ]; then
+            mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e " UPDATE bill SET state = 3 WHERE id = ${bill_id}; "
+        else
+            mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e " UPDATE credit_note SET state = 3 WHERE bill_id = ${bill_id}; "
+        fi
     else
         echo "Error: Received HTTP status $response"
         exit 1
@@ -71,11 +75,34 @@ export $(grep -v '^#' "$ENV_FILE" | xargs)
 for XML_FILE in "$DIRECTORY"/*.xml; do
     if [[ -f "$XML_FILE" ]]; then  # Check if it's a file
         echo "Processing file: $XML_FILE"
-        send_invoice_request "$XML_FILE"
+        send_invoice_request "$XML_FILE" 0
+        if [ $? = 0 ]; then
+            echo "Process done"
+            rm $XML_FILE
+        else
+            echo "Process failed"
+        fi
     else
         echo "No XML files found in the directory."
     fi
 done
-rm examples/InvoiceSimplified/output/*.xml
+
+DIRECTORY="examples/InvoiceSimplified/credit/output/"  # Replace with your actual directory path
+echo "Pusing credit"
+
+for XML_FILE in "$DIRECTORY"/*.xml; do
+    if [[ -f "$XML_FILE" ]]; then  # Check if it's a file
+        echo "Processing file: $XML_FILE"
+        send_invoice_request "$XML_FILE" 1
+        if [ $? = 0 ]; then
+            echo "Process done"
+            rm $XML_FILE
+        else
+            echo "Process failed"
+        fi
+    else
+        echo "No XML files found in the directory."
+    fi
+done
 # mv -f  *.xml /home/ssda/tosend/
 mv -f  *.xml /var/www/html/downloads/

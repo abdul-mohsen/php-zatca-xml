@@ -16,21 +16,59 @@ export $(grep -v '^#' "$ENV_FILE" | xargs)
 DIRECTORY="../../bills"
 composer install  --prefer-dist --no-dev
 cd examples/InvoiceSimplified
-rm  examples/InvoiceSimplified/output/*
 
 # Loop through each JSON file in the directory
 for jsonFile in "$DIRECTORY"/*/*.json; do
     # Check if the file exists
     if [[ -f "$jsonFile" ]]; then
-        echo "Processing file: $jsonFile"
+        echo "bill Processing file: $jsonFile"
         # Run the PHP script with the JSON file as an argument in the background
         php simplified_invoice.php "$jsonFile" &
+        s=$?
         # check if the file is valid
         # Update the state in the database
 
         bill_id=$(cat "$jsonFile" | jq .bill_id)
         mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e "UPDATE bill SET state = 2 WHERE id = ${bill_id}; "
-        rm "$jsonFile"
+        if [ $s -eq 0 ]; then
+            echo "did work"
+
+            rm "$jsonFile"
+        else
+            echo "failed to credit bil"
+        fi
+    else
+        echo "No JSON files found in the directory."
+    fi
+done
+
+
+
+echo "step credit"
+# Directory containing JSON files
+DIRECTORY="../../../bills_credit"
+cd credit
+
+# Loop through each JSON file in the directory
+for jsonFile in "$DIRECTORY"/*/*.json; do
+    # Check if the file exists
+    if [[ -f "$jsonFile" ]]; then
+        echo "creit Processing file: $jsonFile"
+        # Run the PHP script with the JSON file as an argument in the background
+        php simplified_credit_note.php "$jsonFile" &
+        s=$?
+        # check if the file is valid
+        # Update the state in the database
+
+        bill_id=$(cat "$jsonFile" | jq .bill_id)
+        mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e "UPDATE credit_note SET state = 2 WHERE bill_id = ${bill_id}; "
+        if [ $s -eq 0 ]; then
+            echo "did work"
+
+            rm "$jsonFile"
+        else
+            echo "failed to credit bil"
+        fi
     else
         echo "No JSON files found in the directory."
     fi
