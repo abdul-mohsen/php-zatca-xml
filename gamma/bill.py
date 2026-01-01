@@ -211,8 +211,10 @@ def start(engine):
             os.makedirs(directory)
         else:
             continue
+        file_path = f'{directory}{data["sequence_number"]:0>7}_{data["id"]}.json'
+        print(file_path)
 
-        with open(f'{directory}{data["sequence_number"]:0>7}_{data["id"]}.json', 'w') as f:
+        with open(file_path, 'w') as f:
             json.dump(r, f, indent=4)
 
 
