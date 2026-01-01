@@ -30,6 +30,7 @@ send_invoice_request() {
       -H "Authorization: $AUTHORIZATION" \
       -H 'Content-Type: application/json' \
       -d "$JSON_PAYLOAD")
+	cat res
     cat res | jq
 
 	bill_id=$(basename "$1" | cut -d'_' -f2 | cut -d'.' -f1)
