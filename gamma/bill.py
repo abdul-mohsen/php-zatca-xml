@@ -156,6 +156,7 @@ def start(engine):
 
 
     for data in  json_result:
+        print(f"processing {data[id]}")
         r["uuid"] = str(uuid.uuid4())
         dt_object = datetime.fromtimestamp(data["effective_date"]/1000)
         formatted_date_time = dt_object.strftime("%Y-%m-%d %H:%M:%S").split(" ")
