@@ -33,17 +33,17 @@ send_invoice_request() {
     cat res | jq
 
 	bill_id=$(basename "$1" | cut -d'_' -f2 | cut -d'.' -f1)
-	if [ $2 = 0 ]; then
-	  echo "start sql"
-	  mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e " UPDATE bill SET state = 3, qr_code = '$QR_CODE' WHERE id = ${bill_id}; "
-	  echo $QR_CODE
-	  echo "done sql"
-	else
-	  mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e " UPDATE credit_note SET state = 3 WHERE bill_id = ${bill_id}; "
-	fi
 	# Check the response code
 	echo "bill number ${bill_id} - ${2}"
 	if [[ $response -ge 200 && $response -le 299 ]]; then
+	  if [ $2 = 0 ]; then
+		echo "start sql"
+		mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e " UPDATE bill SET state = 3, qr_code = '$QR_CODE' WHERE id = ${bill_id}; "
+		echo $QR_CODE
+		echo "done sql"
+	  else
+		mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e " UPDATE credit_note SET state = 3 WHERE bill_id = ${bill_id}; "
+	  fi
 	  echo "Request successful!"
 	elif [[ $response -eq 409 ]]; then
 	  echo "duplicate invoice"
@@ -62,6 +62,7 @@ USERNAME_BASE64=$(jq -r '.binarySecurityToken' "$JSON_FILE")
 PASSWORD_BASE64=$(jq -r '.secret' "$JSON_FILE")
 COMPLIANCE_REQUEST_ID=$(jq -r '.requestID' "$JSON_FILE")
 AUTHORIZATION="Basic $(echo -n "$USERNAME_BASE64:$PASSWORD_BASE64" | base64 | tr -d '\n')"
+echo $AUTHORIZATION
 
 # Directory containing XML files
 DIRECTORY="examples/InvoiceSimplified/output/"  # Replace with your actual directory path
