@@ -156,7 +156,6 @@ def start(engine):
 
 
     for data in  json_result:
-        print(f"processing {data}")
         r["uuid"] = str(uuid.uuid4())
         dt_object = datetime.fromtimestamp(data["effective_date"]/1000)
         formatted_date_time = dt_object.strftime("%Y-%m-%d %H:%M:%S").split(" ")
@@ -213,6 +212,7 @@ def start(engine):
         else:
             continue
         file_path = f'{directory}{data["sequence_number"]:0>7}_{data["id"]}.json'
+        print("This is the file")
         print(file_path)
 
         with open(file_path, 'w') as f:
