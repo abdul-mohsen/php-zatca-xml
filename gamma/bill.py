@@ -157,6 +157,7 @@ def start(engine):
 
     for data in  json_result:
         r["uuid"] = str(uuid.uuid4())
+        print(1)
         dt_object = datetime.fromtimestamp(data["effective_date"]/1000)
         formatted_date_time = dt_object.strftime("%Y-%m-%d %H:%M:%S").split(" ")
         r["bill_id"] = data["id"]
@@ -175,6 +176,7 @@ def start(engine):
                 }
             }]
         }
+        print(2)
         r["legalMonetaryTotal"] = {
             "lineExtensionAmount": data["total_before_vat"],
             "taxExclusiveAmount": data["total_before_vat"],
@@ -185,32 +187,40 @@ def start(engine):
         }
         invoiceLines = []
         id = 0
+        print(3)
         for p in json.loads(data["products"]):
             if p["price"] == None or p["quantity"] == None:
                 continue
             id = id + 1
             item = to_billx(id, p, f"{id}")
             invoiceLines.append(item)
+        print(4)
         for p in json.loads(data["manual_products"]):
             if p["price"] == None or p["quantity"] == None:
                 continue
             id = id + 1
             item = to_billx(id, p, p["part_name"])
             invoiceLines.append(item)
+        print(5)
         cost = data["maintenance_cost"]
         if cost != 0:
             id = id + 1
             invoiceLines.append(to_bill(id, 1, cost, "maintenance_cost"))
+        print(6)
         r["invoiceLines"] = invoiceLines
 
         # Check if the directory exists
         directory = f'bills/{data["company_name"]}/'
 
+        print(7)
         if not os.path.exists(directory):
             # Create the directory
+            print("7-1")
             os.makedirs(directory)
         else:
+            print("70")
             continue
+        print(8)
         file_path = f'{directory}{data["sequence_number"]:0>7}_{data["id"]}.json'
         print("This is the file")
         print(file_path)
