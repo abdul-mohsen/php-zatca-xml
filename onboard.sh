@@ -14,7 +14,7 @@ echo $COMPLIANCE_REQUEST_ID
 
 # Make the POST request using curl
 curl -i -X 'POST' \
-  'https://gw-fatoora.zatca.gov.sa/e-invoicing/simulation/production/csids' \
+  'https://gw-fatoora.zatca.gov.sa/e-invoicing/core/production/csids' \
   -H 'accept: application/json' \
   -H 'Accept-Version: V2' \
   -H "Authorization: $AUTHORIZATION" \

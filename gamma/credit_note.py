@@ -219,7 +219,7 @@ def credit(engine):
             # Create the directory
             os.makedirs(directory)
         else:
-            print(f"Directory '{directory}' already exists.")
+            continue
 
         with open(f'{directory}{data["sequence_number"]:0>7}_{data["id"]}.json', 'w') as f:
             json.dump(r, f, indent=4)

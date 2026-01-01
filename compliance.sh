@@ -12,14 +12,14 @@ send_invoice_request() {
   AUTHORIZATION="Basic $(echo -n "$USERNAME_BASE64:$PASSWORD_BASE64" | base64 | tr -d '\n')"
 
   # Read the CSR from the file
-  CSR_FILE="generated-csr-20250901060536.csr"  # Replace with the actual path to your CSR file
+  CSR_FILE="keys/prod.csr"  # Replace with the actual path to your CSR file
   CSR=$(<"$CSR_FILE")
 
 
-  fatoora -sim -sign -invoice $1 
+  fatoora -sign -invoice $1 
   local XML_FILE="$(basename $1 .xml)_signed.xml"
 
-  fatoora -sim -invoiceRequest  -invoice $XML_FILE > /dev/null
+  fatoora -invoiceRequest  -invoice $XML_FILE > /dev/null
   JSON_PAYLOAD=$(cat generated-json-request-*.json)
   rm generated-json-request-*.json
 
@@ -28,7 +28,7 @@ send_invoice_request() {
   local SANDBOX='https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal'
   local SIMULATION='https://gw-fatoora.zatca.gov.sa/e-invoicing/simulation'
   local PRODUCTION='https://gw-fatoora.zatca.gov.sa/e-invoicing/core'
-  URL="$SIMULATION/compliance/invoices"
+  URL="$PRODUCTION/compliance/invoices"
   # URL='https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal/compliance/invoices'
 
     # Send the request
@@ -49,4 +49,6 @@ send_invoice_request() {
     fi
 
   }
-send_invoice_request "examples/InvoiceSimplified/output/0000027.xml"
+send_invoice_request "/var/www/html/downloads/0000027.xml"
+send_invoice_request "/var/www/html/downloads/1000027.xml"
+send_invoice_request "/var/www/html/downloads/2000027.xml"

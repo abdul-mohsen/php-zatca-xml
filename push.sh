@@ -5,10 +5,11 @@ cd /home/ssda/git/php-zatca-xml/
 # Function to send invoice request
 send_invoice_request() {
 
-    fatoora -nonprod -sign -invoice $1 
+    fatoora -prod -sign -invoice $1 
     local XML_FILE="$(basename $1 .xml)_signed.xml"
+	local QR_CODE=$(grep -oP '<cbc:EmbeddedDocumentBinaryObject[^>]*>\K[^<]*' $XML_FILE)
 
-    fatoora -sim -invoiceRequest  -invoice $XML_FILE > /dev/null
+    fatoora -prod -invoiceRequest  -invoice $XML_FILE 
     JSON_PAYLOAD=$(cat generated-json-request-*.json)
     rm generated-json-request-*.json
 
@@ -17,7 +18,7 @@ send_invoice_request() {
     local SANDBOX='https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal'
     local SIMULATION='https://gw-fatoora.zatca.gov.sa/e-invoicing/simulation'
     local PRODUCTION='https://gw-fatoora.zatca.gov.sa/e-invoicing/core'
-    URL="$SIMULATION/invoices/reporting/single"
+    URL="$PRODUCTION/invoices/reporting/single"
     # URL='https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal/compliance/invoices'
 
     # Send the request
@@ -31,18 +32,24 @@ send_invoice_request() {
       -d "$JSON_PAYLOAD")
     cat res | jq
 
-    # Check the response code
-    if [[ $response -ge 200 && $response -le 299 ]]; then
-        echo "Request successful!"
-        bill_id=$(basename "$1" | cut -d'_' -f2 | cut -d'.' -f1)
-        if [ $2 = 0 ]; then
-            mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e " UPDATE bill SET state = 3 WHERE id = ${bill_id}; "
-        else
-            mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e " UPDATE credit_note SET state = 3 WHERE bill_id = ${bill_id}; "
-        fi
-    else
-        echo "Error: Received HTTP status $response"
-        exit 1
+	bill_id=$(basename "$1" | cut -d'_' -f2 | cut -d'.' -f1)
+	if [ $2 = 0 ]; then
+	  echo "start sql"
+	  mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e " UPDATE bill SET state = 3, qr_code = '$QR_CODE' WHERE id = ${bill_id}; "
+	  echo $QR_CODE
+	  echo "done sql"
+	else
+	  mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e " UPDATE credit_note SET state = 3 WHERE bill_id = ${bill_id}; "
+	fi
+	# Check the response code
+	echo "bill number ${bill_id} - ${2}"
+	if [[ $response -ge 200 && $response -le 299 ]]; then
+	  echo "Request successful!"
+	elif [[ $response -eq 409 ]]; then
+	  echo "duplicate invoice"
+	else
+	  echo "Error: Received HTTP status $response"
+	  exit 1
     fi
 
 }
@@ -105,4 +112,4 @@ for XML_FILE in "$DIRECTORY"/*.xml; do
     fi
 done
 # mv -f  *.xml /home/ssda/tosend/
-mv -f  *.xml /var/www/html/downloads/
+mv -f  *.xml /var/www/html/downloads/  2> /dev/null

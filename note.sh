@@ -1,1 +1,1 @@
-fatoora -csr -sim -csrConfig csr-config.properties  -generatedCsr keys/ifritah.csr -privateKey keys/ifritah.key
+fatoora -csr -csrConfig csr-config.properties  -generatedCsr keys/prod.csr -privateKey keys/prod.key

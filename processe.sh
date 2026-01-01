@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo "started process."
 
 # Path to the .env file
 ENV_FILE=".env"
@@ -14,7 +15,7 @@ export $(grep -v '^#' "$ENV_FILE" | xargs)
 
 # Directory containing JSON files
 DIRECTORY="../../bills"
-composer install  --prefer-dist --no-dev
+composer install  --prefer-dist --no-dev 2> /dev/null
 cd examples/InvoiceSimplified
 
 # Loop through each JSON file in the directory
@@ -28,10 +29,10 @@ for jsonFile in "$DIRECTORY"/*/*.json; do
         # check if the file is valid
         # Update the state in the database
 
-        bill_id=$(cat "$jsonFile" | jq .bill_id)
-        mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e "UPDATE bill SET state = 2 WHERE id = ${bill_id}; "
         if [ $s -eq 0 ]; then
             echo "did work"
+			bill_id=$(cat "$jsonFile" | jq .bill_id)
+			mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e "UPDATE bill SET state = 2 WHERE id = ${bill_id}; "
 
             rm "$jsonFile"
         else
@@ -60,10 +61,10 @@ for jsonFile in "$DIRECTORY"/*/*.json; do
         # check if the file is valid
         # Update the state in the database
 
-        bill_id=$(cat "$jsonFile" | jq .bill_id)
-        mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e "UPDATE credit_note SET state = 2 WHERE bill_id = ${bill_id}; "
         if [ $s -eq 0 ]; then
             echo "did work"
+			bill_id=$(cat "$jsonFile" | jq .bill_id)
+			mysql -u "$DBUSER" -p"$PASSWORD" -h "$HOST" "$DBNAME" -e "UPDATE credit_note SET state = 2 WHERE bill_id = ${bill_id}; "
 
             rm "$jsonFile"
         else
